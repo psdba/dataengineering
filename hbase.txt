@@ -1,0 +1,73 @@
+Apache HBase is a distributed, scalable, and NoSQL database that is designed to run on top of the Hadoop Distributed File System (HDFS).
+ It provides real-time read and write access to large datasets and is modeled after Google's Bigtable. HBase is part of the Apache Hadoop project and is commonly used for applications that require random, real-time read/write access to big data.
+
+
+1. Start HBase:
+  
+   start-hbase.sh
+   
+
+2. HBase Shell:
+   HBase comes with a shell that you can use to interact with the database.
+
+ 
+   hbase shell
+   
+
+3. Create a Table:
+   In HBase, you need to create a table to store your data. Tables in HBase are distributed and can be thought of as multi-dimensional maps.
+
+   
+   create 'mytable', 'cf1', 'cf2'
+   
+   or 
+   create 'customer','name','contact_details'
+
+   This command creates a table named 'mytable' with two column families ('cf1' and 'cf2').
+
+5. Insert Data:
+   You can insert data into HBase using the `put` command. Data is organized by row key, column family, and column qualifier.
+
+  
+   put 'mytable', 'row1', 'cf1:column1', 'value1'
+   put 'mytable', 'row1', 'cf2:column2', 'value2'
+   
+
+   This inserts data into 'mytable' at 'row1' in 'cf1:column1' and 'cf2:column2'.
+
+hbase(main):006:0> scan 'test'
+
+6. Retrieve Data:
+   You can retrieve data using the `get` command:
+
+  
+   get 'mytable', 'row1'
+   
+
+   This retrieves all columns for 'row1' in 'mytable'.
+
+7. Scan Data:
+   You can scan the entire table or a range of rows:
+
+ 
+   scan 'mytable'
+   
+
+   This will display all data in 'mytable'.
+
+8. Delete Data:
+   You can delete data using the `delete` command:
+
+  
+   delete 'mytable', 'row1', 'cf1:column1'
+   
+
+   This deletes the specified column in 'row1'.
+
+9. Disable and Drop Table:
+   When you're done, you can disable and drop the table:
+
+ 
+   disable 'mytable'
+   drop 'mytable'
+   

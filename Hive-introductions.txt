@@ -1,0 +1,175 @@
+What is hive
+what is hive metastore and its configuration
+Hive data types
+Demo on 
+	1.create table
+	2.Drop table
+	3.Hive queries	
+	4.Hive joins and Sub queries
+	5.Hive functions
+	6.Hive ETL
+
+============================================
+Hive is a data warehousing infrastructure built on top of Hadoop, designed to facilitate querying and managing large datasets residing in distributed storage. It provides a SQL-like interface (known as HiveQL) to query and manage structured data. Here's a breakdown of your queries:
+
+1. Hive Metastore: The Hive Metastore is a central repository that stores metadata for Hive tables, including their schema (column names and types), file format, location, and other attributes. It serves as a catalog that allows users to query and manage tables without needing to know the underlying details of where or how the data is stored.
+
+   Configuration of the Hive Metastore typically involves specifying the database backend (such as MySQL, PostgreSQL, or Derby) where the metadata will be stored, along with connection parameters such as hostname, port, username, and password. Additionally, configurations related to security, high availability, and performance tuning can be adjusted as needed.
+
+2. Hive Data Types: Hive supports various data types, including 
+primitive types
+================== 
+INT, BIGINT, FLOAT, DOUBLE, STRING, BOOLEAN, etc.
+
+Complex types:
+==============
+   
+   ARRAY, MAP, STRUCT
+
+
+ external table demo:
+ ===================
+ create csv file demo_data.csv
+ 
+id,name,age
+1,John,25
+2,Alice,30
+3,Bob,28
+4,Eve,22
+
+create table:
+-- Create database if not exists (optional)
+CREATE DATABASE IF NOT EXISTS mydatabase;
+
+-- Switch to the database
+USE mydatabase;
+
+-- Create an external table
+CREATE EXTERNAL TABLE IF NOT EXISTS demo4_table (
+    id INT,
+    name STRING,
+    age INT
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION'/home/cloudera/Desktop/demo_data3.csv';
+
+
+without key word external:
+
+CREATE  TABLE  demo9_table (
+    id INT,
+    name STRING,
+    age INT
+)
+LOCATION'/user/hive/warehouse/demo9_table';
+
+
+3. Demo:
+========
+
+   - Create Table:
+     
+     CREATE TABLE employee (
+         id INT,
+         name STRING,
+         age INT,
+         salary FLOAT
+     )
+     ROW FORMAT DELIMITED
+     FIELDS TERMINATED BY ','
+     STORED AS TEXTFILE;
+     
+
+   - Drop Table:
+     
+     DROP TABLE employee;
+     
+
+   - Hive Queries:
+     
+     -- Select query
+     SELECT * FROM employee;
+
+     -- Aggregation query
+     SELECT department, AVG(salary) FROM employee GROUP BY department;
+     
+
+   - Hive Joins and Subqueries:
+     
+     -- Inner Join
+     SELECT e.name, d.department_name
+     FROM employee e
+     JOIN department d ON e.department_id = d.id;
+
+     -- Subquery
+     SELECT * FROM employee WHERE department_id IN (SELECT id FROM department WHERE name = 'Sales');
+     
+
+   - Hive Functions: Hive provides a wide range of built-in functions for data manipulation, transformation, and analysis. Examples include mathematical functions, string functions, date functions, etc.
+
+   - Hive ETL (Extract, Transform, Load): Hive can be used for ETL processes to extract data from various sources, transform it as necessary, and load it into Hive tables. This typically involves writing HiveQL scripts or using tools like Apache NiFi or Apache Spark for data movement and transformation.
+
+Demo on Arrays and struct
+==========================
+Demo on arrays:
+=============
+ Run a select statement to view the content of the table
+SELECT * FROM demo_table;
+
+ Run 
+SELECT * FROM demo_table;
+
+2nd Demo
+======
+CREATE TABLE employee_info (
+    emp_id INT,
+    emp_name STRING,
+    emp_skills ARRAY<STRING>,
+    emp_contact STRUCT<phone_number: STRING, email: STRING>
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+COLLECTION ITEMS TERMINATED BY '|'
+MAP KEYS TERMINATED BY ':'
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+
+insert data
+===========
+INSERT INTO employee_info VALUES
+(1, 'John Doe', ARRAY('Java', 'SQL', 'Python'), STRUCT('123-456-7890', 'john@example.com')),
+(2, 'Jane Smith', ARRAY('C++', 'R', 'Scala'), STRUCT('987-654-3210', 'jane@example.com'));
+
+Query:
+
+SELECT * FROM employee_info;
+
+This should output something like:
+
+
++--------+------------+-----------------------+----------------------------------------+
+| emp_id | emp_name   | emp_skills            | emp_contact                            |
++--------+------------+-----------------------+----------------------------------------+
+| 1      | John Doe   | ["Java","SQL","Python"]| {"phone_number":"123-456-7890","email":"john@example.com"} |
+| 2      | Jane Smith | ["C++","R","Scala"]    | {"phone_number":"987-654-3210","email":"jane@example.com"} |
++--------+------------+-----------------------+----------------------------------------+
+
+
+ function
+ ==============
+ average:
+
+CREATE TABLE IF NOT EXISTS my_table (
+    id INT,
+    value DOUBLE
+);
+
+INSERT INTO my_table VALUES
+(1, 10.5),
+(2, 15.7),
+(3, 20.2),
+(4, 8.9),
+(5, 12.6);
+
+SELECT AVG(value) AS average_value FROM my_table;

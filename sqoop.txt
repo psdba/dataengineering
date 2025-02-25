@@ -1,0 +1,245 @@
+
+hands on
+
+1.connect to the mysql
+syntax:
+mysql -u root -p
+cloudera
+2.create dummy db with demo data
+
+
+3.import it to the hdfs/directory
+
+syntax:
+=======
+sqoop import \
+--connect jdbc:mysql://mysql_host:3306/your_database \
+--username mysql_user \
+--password mysql_password \
+--table your_table \
+--target-dir /target/hdfs/directory \
+--num-mappers 4
+
+
+example:
+=============
+
+sqoop import \
+--connect jdbc:mysql://localhost:3306/hellodb \
+--username root \
+--password 'cloudera' \
+--table test \
+--warehouse-dir /user/hive/warehouse \
+--num-mappers 4
+
+create the table in hive
+==========================
+
+CREATE TABLE testimport (
+    id int,
+    name varchar (50)
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/user/hive/warehouse/<tablename>';
+
+
+
+then load it
+LOAD DATA INPATH '/user/hive/warehouse/testimport' INTO TABLE testimport;
+
+
+import all tables:
+===================
+sqoop import-all-tables \
+--connect jdbc:mysql://localhost:3306/hellodb \
+--username root \
+-P  \
+--warehouse-dir /user/hive/warehouse \
+--num-mappers 4
+
+--warehouse-dir /target/hdfs/hive/warehouse \
+
+import with schema:
+=======================
+
+sqoop import \
+--connect jdbc:mysql://localhost:3306/hellodb \
+--username root \
+--password 'cloudera' \
+--table order_items \
+--hive-import \
+--hive-database testschema \
+--hive-table order_items  \
+--num-mappers 2
+
+export example:
+=============
+we must create the table in mysql
+
+sqoop export \
+--connect jdbc:mysql://localhost:3306/hellodb \
+--username root \
+--password 'cloudera' \
+--table order_items2 \
+--input-fields-terminated-by "\001"
+======================================
+Query
+sqoop eval \
+--connect jdbc:mysql://localhost:3306/hellodb \
+--username root \
+--password 'cloudera' \
+--query "select * from order_items"
+==============================
+list all databases
+sqoop list-databases \
+--connect jdbc:mysql://localhost:3306/hellodb \
+--username root \
+--password 'cloudera' 
+--export-dir  /user/hive/warehouse/testschema.db/order_items \
+ 
+ using pwd file:
+ ==============
+ hdfs dfs -mkdir /user/cloudera/Sqoop_password/
+hdfs dfs -put sqoop.password /user/cloudera/Sqoop_password/
+--username root -- password-file /user/cloudera/Squoop_password/sqoop.password
+
+with where conditions
+===================
+sqoop import \
+--connect jdbc:mysql://localhost:3306/hellodb \
+--username root \
+--password 'cloudera' \
+--query "select id, product, amount from order_items where id = 1 AND \$CONDITIONS" \
+--split-by id \
+--hive-import \
+--hive-database default \
+--hive-table order_items \
+--target-dir /user/hive/warehouse/order_items
+=================================================
+dml commands in query:
+add new value
+sqoop eval \
+--connect jdbc:mysql://localhost:3306/hellodb \
+--username root \
+--password 'cloudera' \
+--query "INSERT INTO order_items  VALUES (6, 'fromsqoop', 200)"
+
+delete new value:
+================
+sqoop eval \
+--connect jdbc:mysql://localhost:3306/hellodb \
+--username root \
+--password 'cloudera' \
+--query "DELETE FROM order_items WHERE id = 1"
+
+update table
+==================
+sqoop eval \
+--connect jdbc:mysql://localhost:3306/hellodb \
+--username root \
+--password 'cloudera' \
+--query "UPDATE order_items SET product = 'update_sqoop'  WHERE id = 5" 
+
+=================
+
+creating job
+==================
+sqoop job --create insert4_job \
+-- import \
+--connect jdbc:mysql://localhost:3306/hellodb \
+--username root \
+--password-file /user/cloudera/Sqoop_password/sqoop.password  \
+--query "UPDATE order_items SET product = 'updatejob_sqoop'  WHERE id = 5" AND $CONDITIONS" \
+--split-by id \
+--target-dir /user/hive/warehouse/order_items
+
+password file error
+===================
+
+GRANT ALL PRIVILEGES ON hellodb.* TO 'root'@'localhost' IDENTIFIED BY 'cloudera';
+FLUSH PRIVILEGES;
+
+
+
+
+another program
+===========
+--query "INSERT INTO order_items VALUES (6, 'fromsqoop3', 300) AND \$CONDITIONS" \
+--split-by id \
+--hive-import \
+--hive-database default \
+--hive-table order_items \
+--target-dir /user/hive/warehouse/order_items
+
+
+to check created or not
+========================
+sqoop job --list
+
+to execute job
+=================
+sqoop job --exec insert_job
+
+delete it 
+=========
+sqoop job --delete insert_job
+
+
+
+--direct
+========
+It allows sqoop to run directly to run more efficiently 
+
+--last value 
+============
+check-column <column name> or <date>
+
+date:
+--incremental lastmodified --last-value 2024-02-21
+
+column name
+
+--incremental append --check-column custid --last-value 0
+
+how to see last value in job
+===========================
+
+ls -A
+cd .sqoop
+ls
+vi metastore.db.script
+
+how to automate shell script
+
+shell and cron job
+==================
+1.nano run_sqoop_job.sh
+2. Add the following lines
+#!/bin/bash
+
+# Define the Sqoop job command
+sqoop_cmd="sqoop job --exec insert4_job"
+
+# Execute the Sqoop job
+$sqoop_cmd
+
+3.
+chmod +x run_sqoop_job.sh
+
+4. crontab -e
+
+# Add the following line to the crontab file and save it
+ */1 * * * * /home/cloudera/run_sqoop_job.sh
+# This will run the script every minute
+
+
+check it is working or not
+
+grep "run_sqoop_job.sh" /var/log/cron
+
+
+find sqoop log
+sudo find /var/log -name "*sqoop*.log" -type f
+grep "insert4_job" /var/log/sqoop2/sqoop.log
